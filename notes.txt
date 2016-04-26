@@ -1,0 +1,80 @@
+Encrypting:
+encrypt 2 letters at a time
+	P1 = 't', P2 = 'h'
+	let C1, C2 be the corresponding encoded letters (P1 -> C1, P2 -> C2)
+
+
+Refer to the cipher table you created:
+	if P1, P2 on same row: C1, C2 are the cells directly to the right
+	if P1, P2 on same column: C1, C2 are the cells directly below
+	if P1, P2 are opposite corners of some rectangle:
+	C1, C2 complete the rectangle with C1 and P1 on the same row
+
+Tests:
+	Encrypt “the secret is safe”
+	> thesecretissafe
+	if there are 2 of the same letter paired together, insert an x
+	> thesecretisxsafe
+
+	th->uf (rule 3: rectangle)
+	es->re (rule 2: same column)
+	ec->tz (rule 3: rectangle)
+	re->zr (rule 1: same row)
+	ti->uy (rule 3: rectangle)
+	sx->qz (rule 3: rectangle)
+	sa->hv (rule 3: rectangle)
+	fe->st (rule 3: rectangle)
+	encrypted phrase: ufretzzruyqzhvst
+
+	65-90 & 97-122
+
+How to set a whole row
+
+//suppose you wanted to set row 2...
+int M[][] = new int[5][5]
+for (int column=0; column<5; column++) {
+	M[2][column]=1;
+}
+
+
+How to set a whole column				
+
+//suppose you wanted to set column 3...
+int M[][] = new int[5][5]
+for (int row=0; row<5; row++) {
+	M[row][3]=0;
+}
+
+
+Multiply all odd numbers in the grid by 2
+
+for (int r=0; r<5; r++) {
+	for (int c=0; c<5; c++) {
+		if (M[r][c] % 2 == 1) {
+M[r][c] = M[r][c] * 2;
+}
+	}
+}
+
+
+Add 1 to all even locations in the grid		
+for (int r=0; r<5; r++) {
+	for (int c=0; c<5; c++) {
+		if (M[r][c] % 2 == 0) {
+M[r][c] = M[r][c] + 1;
+}
+	}
+}
+
+
+
+Search for the largest value in a row
+
+int row = 2; //use row 2
+int largest = M[row][0]; //set largest to column 0 of row 2 as a start point
+for (int col=1; col<5; col++) {
+if (M[row][col]>largest) {
+	largest = M[row][col];
+}		
+}
+//after the loop is done the variable largest contains the largest value in the row
