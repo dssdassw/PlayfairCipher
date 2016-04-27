@@ -3,7 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.Arrays;
 
-@SuppressWarnings("serial")
+//SuppressWarnings("serial")
 public class Cipher extends JFrame {
 	private JPanel root;
 	private JTextField inputField;
@@ -18,13 +18,6 @@ public class Cipher extends JFrame {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setMinimumSize(new Dimension(WIN_W, WIN_H));
 		setResizable(false);
-		buildPanel();
-		add(root);
-		pack();
-		setVisible(true);
-	}
-	
-	private void buildPanel() {
 		root = new JPanel();
 		operateBtn = new JButton("Encrypt");
 		switchBtn = new JButton("Switch to decrypt mode");
@@ -32,15 +25,15 @@ public class Cipher extends JFrame {
 		resultLabel = new JLabel(" ");
 		JPanel topPanel = new JPanel();
 		JPanel btmPanel = new JPanel();
-		JTextField inputField = new JTextField();
+		inputField = new JTextField();
+		operateBtn.addActionListener(new operateBtnListener());
+		switchBtn.addActionListener(new switchBtnListener());
 		inputField.setText("the secret is safe");
 		root.setLayout(new GridLayout(2, 1));
 		topPanel.setLayout(new GridLayout(2, 2));
 		btmPanel.setLayout(new GridLayout(1, 1));
 		topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		btmPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-		operateBtn.addActionListener(new operateBtnListener());
-		switchBtn.addActionListener(new switchBtnListener());
 		topPanel.add(instructions);
 		topPanel.add(operateBtn);
 		topPanel.add(inputField);
@@ -48,6 +41,9 @@ public class Cipher extends JFrame {
 		btmPanel.add(resultLabel);
 		root.add(topPanel);
 		root.add(btmPanel);
+		add(root);
+		pack();
+		setVisible(true);
 	}
 	
 	private static int[][] setup() { //returns a multidimensional int array with the ASCII values of every cipher letter in order
@@ -60,7 +56,7 @@ public class Cipher extends JFrame {
 														//x 0 1 2 3 4
 	
 	private class switchBtnListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
+		public void actionPerformed(ActionEvent event) {
 			if (mode) {
 				operateBtn.setText("Encrypt");
 				instructions.setText("Type the text you wish to encode here");
@@ -77,7 +73,7 @@ public class Cipher extends JFrame {
 	}
 	
 	private class operateBtnListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
+		public void actionPerformed(ActionEvent event2) {
 			int[][] playfair = setup();
 			String rawstr = inputField.getText();
 			rawstr = rawstr.toLowerCase();
@@ -97,7 +93,7 @@ public class Cipher extends JFrame {
 					for(int elementToFill = c + 1; elementToFill<raw.length; elementToFill++) { //fills in the rest of the array with everything that was after the match
 						raw[elementToFill] = postMatchStorage[counter];
 						counter = counter + 1;
-					} //done!
+					}
 					counter = 0;
 				}
 			}
@@ -106,69 +102,135 @@ public class Cipher extends JFrame {
 			int[] intcode = new int[raw.length]; //begins converting every character to an int before processing, the final step
 			for (int i = 0; i < intcode.length; i++) { //gets ready to iterate
 				intcode[i] = (int)raw[i]; //intcode retrieves the ascii decimal representation of each character in the char[] array
-			}
-			for(int i = 0; i<intcode.length; i+=2) { //searches for the letters in the array
-				//System.out.print((char)intcode[i]);
-				//System.out.println((char)intcode[i+1]);
-				int indexAx = -1, indexAy = -1, indexBx = -1, indexBy = -1; //set to -1 to check for not-found
-				for (int y = 0; y < playfair.length; y++) {
-					for (int x = 0; x < playfair[y].length; x++) {
-						if (playfair[y][x] == intcode[i]) {
-							indexAx = x;
-							indexAy = y;
+			} //string processing is now complete!
+			if(!mode) { //encrypt
+				for(int i = 0; i<intcode.length; i+=2) { //searches for the letters in the array
+					//System.out.print((char)intcode[i]);
+					//System.out.println((char)intcode[i+1]);
+					int indexAx = -1, indexAy = -1, indexBx = -1, indexBy = -1; //set to -1 to check for not-found
+					for (int y = 0; y < playfair.length; y++) {
+						for (int x = 0; x < playfair[y].length; x++) {
+							if (playfair[y][x] == intcode[i]) {
+								indexAx = x;
+								indexAy = y;
+							}
 						}
 					}
-				}
-				if(indexAx == -1 | indexAy == -1) {
-					System.out.println("Values for some letters were not found!"); //deal with this error better later
-				}
-				for(int y = 0; y < playfair.length; y++) {
-					for (int x = 0; x < playfair[y].length; x++) {
-						if (playfair[y][x] == intcode[i+1]) {
-							indexBx = x;
-							indexBy = y;
+					if(indexAx == -1 | indexAy == -1) {
+						System.out.println("Values for some letters were not found!"); //deal with this error better later
+					}
+					for(int y = 0; y < playfair.length; y++) {
+						for (int x = 0; x < playfair[y].length; x++) {
+							if (playfair[y][x] == intcode[i+1]) {
+								indexBx = x;
+								indexBy = y;
+							}
 						}
 					}
+					if(indexBx == -1 | indexBy == -1) {
+						System.out.println("Values for some letters were not found!"); //same as above
+					}
+					//System.out.println((char)intcode[i] + ": (" + indexAx + ", " + indexAy + ") " + (char)intcode[i+1] + ": (" + indexBx + ", " + indexBy + ")");
+					//CASES:
+					if(indexAy == indexBy) { //SAME ROW
+						if(indexAx+1>4) { //if it is the rightmost:
+							result = result + (char)playfair[indexAy][0]; //take the character on the leftmost
+						}
+						else {
+							result = result + (char)playfair[indexAy][indexAx+1]; //the character to right of the matched 
+						}
+						if(indexBx+1>4) { //why did i have 3 here before
+							result = result + (char)playfair[indexBy][0];
+						}
+						else {
+							result = result + (char)playfair[indexBy][indexBx+1];
+						}
+					}
+					else if(indexAx == indexBx) { //SAME COLUMN
+						if(indexAy+1>4) { //if it is in the bottom row with nothing below it...
+							result = result + (char)playfair[0][indexAx]; //take the character at the top
+						}
+						else {
+							result = result + (char)playfair[indexAy+1][indexAx];
+						}
+						if(indexBy+1>4) {
+							result = result + (char)playfair[0][indexBx];
+						}
+						else {
+							result = result + (char)playfair[indexBy+1][indexBx];
+						}
+					}
+					else { //OPPOSITE CORNERS MATCH
+						result = result + (char)playfair[indexAy][indexBx];
+						result = result + (char)playfair[indexBy][indexAx];
+					}
 				}
-				if(indexBx == -1 | indexBy == -1) {
-					System.out.println("Values for some letters were not found!"); //same as above
-				}
-				//System.out.println((char)intcode[i] + ": (" + indexAx + ", " + indexAy + ") " + (char)intcode[i+1] + ": (" + indexBx + ", " + indexBy + ")");
-				//CASES:
-				if(indexAy == indexBy) { //SAME ROW
-					if(indexAx+1>4) { //if it is the rightmost:
-						result = result + (char)playfair[indexAy][0]; //take the character on the leftmost
-					}
-					else {
-						result = result + (char)playfair[indexAy][indexAx+1]; //the character to right of the matched 
-					}
-					if(indexBx+1>4) { //why did i have 3 here before
-						result = result + (char)playfair[indexBy][0];
-					}
-					else {
-						result = result + (char)playfair[indexBy][indexBx+1];
-					}
-				}
-				else if(indexAx == indexBx) { //SAME COLUMN
-					if(indexAy+1>4) { //if it is in the bottom row with nothing below it...
-						result = result + (char)playfair[0][indexAx];
-					}
-					else {
-						result = result + (char)playfair[indexAy+1][indexAx];
-					}
-					if(indexBy+1>4) {
-						result = result + (char)playfair[0][indexBx];
-					}
-					else {
-						result = result + (char)playfair[indexBy+1][indexBx];
-					}
-				}
-				else { //OPPOSITE CORNERS MATCH
-					result = result + (char)playfair[indexAy][indexBx];
-					result = result + (char)playfair[indexBy][indexAx];
-				}
+				resultLabel.setText(result);
 			}
-			resultLabel.setText(result);
+			else { //decrypt
+				for(int i = 0; i<intcode.length; i+=2) { //searches for the letters in the array
+					//System.out.print((char)intcode[i]);
+					//System.out.println((char)intcode[i+1]);
+					int indexAx = -1, indexAy = -1, indexBx = -1, indexBy = -1; //set to -1 to check for not-found
+					for (int y = 0; y < playfair.length; y++) {
+						for (int x = 0; x < playfair[y].length; x++) {
+							if (playfair[y][x] == intcode[i]) {
+								indexAx = x;
+								indexAy = y;
+							}
+						}
+					}
+					if(indexAx == -1 | indexAy == -1) {
+						System.out.println("Values for some letters were not found!"); //deal with this error better later
+					}
+					for(int y = 0; y < playfair.length; y++) {
+						for (int x = 0; x < playfair[y].length; x++) {
+							if (playfair[y][x] == intcode[i+1]) {
+								indexBx = x;
+								indexBy = y;
+							}
+						}
+					}
+					if(indexBx == -1 | indexBy == -1) {
+						System.out.println("Values for some letters were not found!"); //same as above
+					}
+					//System.out.println((char)intcode[i] + ": (" + indexAx + ", " + indexAy + ") " + (char)intcode[i+1] + ": (" + indexBx + ", " + indexBy + ")");
+					//CASES:
+					if(indexAy == indexBy) { //SAME ROW
+						if(indexAx-1<0) { //if it is the leftmost:
+							result = result + (char)playfair[indexAy][4]; //take the character on the rightmost
+						}
+						else {
+							result = result + (char)playfair[indexAy][indexAx-1]; //the character to left of the matched 
+						}
+						if(indexBx-1<0) { //why did i have 3 here before
+							result = result + (char)playfair[indexBy][4];
+						}
+						else {
+							result = result + (char)playfair[indexBy][indexBx-1];
+						}
+					}
+					else if(indexAx == indexBx) { //SAME COLUMN
+						if(indexAy-1<0) { //if it is in the top row with nothing above it...
+							result = result + (char)playfair[4][indexAx]; //take the character at the bottom
+						}
+						else {
+							result = result + (char)playfair[indexAy-1][indexAx];
+						}
+						if(indexBy-1<0) {
+							result = result + (char)playfair[4][indexBx];
+						}
+						else {
+							result = result + (char)playfair[indexBy-1][indexBx];
+						}
+					}
+					else { //OPPOSITE CORNERS MATCH
+						result = result + (char)playfair[indexBy][indexAx];
+						result = result + (char)playfair[indexAy][indexBx];
+					} //ufretzzruyqzhvst 
+				}
+				resultLabel.setText(result);
+			}
 		}
 	}
 	
